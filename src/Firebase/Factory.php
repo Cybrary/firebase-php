@@ -678,7 +678,7 @@ class Factory
     public function createIdentityPlatform(): Contract\IdentityPlatform
     {
         $httpClient = $this->createApiClient([
-            'base_uri' => 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/',
+            'base_uri' => 'https://identitytoolkit.googleapis.com/admin/v2/',
         ]);
 
         $identityApiClient = new IdentityPlatform\ApiClient($httpClient, $this->projectId, $this->tenantId);
