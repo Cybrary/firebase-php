@@ -4,9 +4,10 @@ namespace Kreait\Firebase\IdentityPlatform;
 
 use Kreait\Firebase\Exception\InvalidArgumentException;
 use \Carbon\Carbon;
+use JsonSerializable;
 use Kreait\Firebase\Value\Certificate;
 
-class SpCertificate
+class SpCertificate implements JsonSerializable
 {
     private Certificate $x509Certificate;
     private Carbon $expiresAt;
@@ -45,5 +46,18 @@ class SpCertificate
         }
 
         return $instance;
+    }
+
+    public function toArray()
+    {
+        return [
+            'x509Certificate' => $this->x509Certificate,
+            'expiresAt' => $this->expiresAt,
+        ];
+    }
+
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 }

@@ -9,6 +9,9 @@ class IdpConfig
 {
     private string $idpEntityId;
     private Url $ssoUrl;
+    /**
+     * @var array<Certificate>
+     */
     private array $idpCertificates;
     private bool $signRequest;
 
@@ -42,7 +45,7 @@ class IdpConfig
                     break;
                 case 'idpCertificates':
                     if (!is_array($value)) {
-                        throw new InvalidArgumentException(sprintf('%s must be an array'));
+                        throw new InvalidArgumentException(sprintf('%s must be an array', $key));
                     }
                     $instance->idpCertificates = array_map(fn ($certificate) => $certificate instanceof Certificate ? $certificate : new Certificate($certificate), $value);
                     break;

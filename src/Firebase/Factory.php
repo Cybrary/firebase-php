@@ -674,4 +674,16 @@ class Factory
             return null;
         }
     }
+
+    public function createIdentityPlatform(): Contract\IdentityPlatform
+    {
+        $httpClient = $this->createApiClient([
+            'base_uri' => 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/',
+        ]);
+
+        $identityApiClient = new IdentityPlatform\ApiClient($httpClient, $this->projectId, $this->tenantId);
+
+
+        return new IdentityPlatform($identityApiClient, $httpClient);
+    }
 }

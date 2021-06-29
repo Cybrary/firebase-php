@@ -3,12 +3,14 @@ namespace Kreait\Firebase\IdentityPlatform;
 
 use InvalidArgumentException;
 use Kreait\Firebase\Value\Url;
-use Kreait\Firebase\Value\Certificate;
 
 class SpConfig
 {
     private string $spEntityId;
     private Url $callbackUri;
+    /**
+     * @var array<SpCertificate>
+     */
     private array $spCertificates;
 
     public const FIELDS = ['spEntityId', 'callbackUri', 'spCertificates'];

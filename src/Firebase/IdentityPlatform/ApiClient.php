@@ -14,6 +14,7 @@ use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Firebase\Project\ProjectId;
 use Kreait\Firebase\Request\DefaultSupportedIdpConfig as DefaultSupportedIdpConfigRequest;
 use Kreait\Firebase\Request\InboundSamlConfig as InboundSamlConfigRequest;
+use Kreait\Firebase\Request\OauthIdpConfig as OauthIdpConfigRequest;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
@@ -58,15 +59,18 @@ class ApiClient
     }
 
     /**
+     * @param DefaultSupportedIdpConfigRequest $request
      * @throws AuthException
      * @throws FirebaseException
-     */    public function createDefaultSupportedIdpConfigs(DefaultSupportedIdpConfigRequest $request) : ResponseInterface
+     */
+    public function createDefaultSupportedIdpConfigs(DefaultSupportedIdpConfigRequest $request) : ResponseInterface
     {
         $uri = 'defaultSupportedIdpConfigs';
         return $this->requestApiWithProjectId($uri, $request->jsonSerialize());
     }
 
     /**
+     * @param string $name
      * @throws AuthException
      * @throws FirebaseException
      */    public function deleteDefaultSupportedIdpConfigs(string $name) : ResponseInterface
@@ -76,6 +80,7 @@ class ApiClient
     }
 
     /**
+     * @param string $name
      * @throws AuthException
      * @throws FirebaseException
      */
@@ -86,6 +91,8 @@ class ApiClient
     }
 
     /**
+     * @param string $name
+     * @param DefaultSupportedIdpConfigRequest $request
      * @throws AuthException
      * @throws FirebaseException
      */
@@ -96,6 +103,7 @@ class ApiClient
     }
 
     /**
+     * @param InboundSamlConfigRequest $request
      * @throws AuthException
      * @throws FirebaseException
      */
@@ -106,6 +114,7 @@ class ApiClient
     }
 
     /**
+     * @param string $name
      * @throws AuthException
      * @throws FirebaseException
      */
@@ -116,6 +125,7 @@ class ApiClient
     }
 
     /**
+     * @param string $name
      * @throws AuthException
      * @throws FirebaseException
      */
@@ -126,25 +136,30 @@ class ApiClient
     }
 
     /**
+     * @param string $name
+     * @param InboundSamlConfigRequest $request
      * @throws AuthException
      * @throws FirebaseException
-     */    public function updateInboundSamlConfigs(string $name, InboundSamlConfigRequest $request) : ResponseInterface
+     */
+    public function updateInboundSamlConfigs(string $name, InboundSamlConfigRequest $request) : ResponseInterface
     {
         $uri = sprintf('inboundSamlConfigs/%s', $name);
         return $this->requestApiWithProjectId($uri, $request->jsonSerialize(), 'PATCH');
     }
 
     /**
+     * @param OauthIdpConfigRequest $request
      * @throws AuthException
      * @throws FirebaseException
      */
-    public function createOauthIdpConfigs($request) : ResponseInterface
+    public function createOauthIdpConfigs(OauthIdpConfigRequest $request) : ResponseInterface
     {
         $uri = 'oauthIdpConfigs';
         return $this->requestApiWithProjectId($uri, $request->jsonSerialize());
     }
 
     /**
+     * @param  string $name
      * @throws AuthException
      * @throws FirebaseException
      */
@@ -155,6 +170,7 @@ class ApiClient
     }
 
     /**
+     * @param  string $name
      * @throws AuthException
      * @throws FirebaseException
      */    public function getOauthIdpConfigs(string $name) : ResponseInterface
@@ -164,15 +180,19 @@ class ApiClient
     }
 
     /**
+     * @param  string $name
+     * @param OauthIdpConfigRequest $request
      * @throws AuthException
      * @throws FirebaseException
-     */    public function updateOauthIdpConfigs(string $name, $request) : ResponseInterface
+     */
+    public function updateOauthIdpConfigs(string $name, $request) : ResponseInterface
     {
         $uri = sprintf('oauthIdpConfigs/%s', $name);
         return $this->requestApiWithProjectId($uri, $request->jsonSerialize(), 'PATCH');
     }
 
     /**
+     * @internal
      * @throws AuthException
      * @throws FirebaseException
      */

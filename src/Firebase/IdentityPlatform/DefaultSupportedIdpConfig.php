@@ -36,7 +36,7 @@ class DefaultSupportedIdpConfig
             throw new InvalidArgumentException('name property is a required string');
         }
 
-        array_walk(self::FIELDS, fn ($field) => $this->$instance = $properties[$field] ?? null);
+        array_walk(self::FIELDS, fn ($field) => $instance->$field = $properties[$field] ?? null);
 
         return $instance;
     }
@@ -59,7 +59,7 @@ class DefaultSupportedIdpConfig
     /**
      * Returns the name
      *
-     * @return void
+     * @return string
      */
     public function getName() : string
     {

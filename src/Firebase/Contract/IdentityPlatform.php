@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Kreait\Firebase\Contract;
 
+use Kreait\Firebase\IdentityPlatform\DefaultSupportedIdpConfig;
+use Kreait\Firebase\IdentityPlatform\InboundSamlConfig;
+use Kreait\Firebase\IdentityPlatform\OauthIdpConfig;
 use Psr\Http\Message\ResponseInterface;
+
+use Kreait\Firebase\Request;
 
 interface IdentityPlatform
 {
@@ -14,7 +19,7 @@ interface IdentityPlatform
      * @return ResponseInterface
      *
      * @throws Exception\FirebaseException
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      */
     public function listAllDefaultSupportedIdpConfigs() : ResponseInterface;
 
@@ -24,28 +29,28 @@ interface IdentityPlatform
      * @return ResponseInterface
      *
      * @throws Exception\FirebaseException
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      */
     public function listDefaultSupportedIdpConfigs() : ResponseInterface;
 
     /**
      * Create a default supported Idp configuration for an Identity Toolkit project.
      *
-     * @param array<string, mixed>|Request\DefaultSupportedIdpConfig $properties $properties
-     * @return ResponseInterface
+     * @param array<string, mixed>|Request\DefaultSupportedIdpConfig $properties
+     * @return DefaultSupportedIdpConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
 
-    public function createDefaultSupportedIdpConfigs($properties) : ResponseInterface;
+    public function createDefaultSupportedIdpConfigs($properties) : DefaultSupportedIdpConfig;
     /**
      * Delete a default supported Idp configuration for an Identity Toolkit project.
      *
      * @param string $name
      * @return ResponseInterface
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
 
@@ -54,42 +59,42 @@ interface IdentityPlatform
      * Retrieve a default supported Idp configuration for an Identity Toolkit project.
      *
      * @param string $name
-     * @return ResponseInterface
+     * @return DefaultSupportedIdpConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
-    public function getDefaultSupportedIdpConfigs(string $name) : ResponseInterface;
+    public function getDefaultSupportedIdpConfigs(string $name) : DefaultSupportedIdpConfig;
 
     /**
      * Update a default supported Idp configuration for an Identity Toolkit project.
      *
      * @param string $name
      * @param array<string, mixed>|Request\DefaultSupportedIdpConfig $properties
-     * @return ResponseInterface
+     * @return DefaultSupportedIdpConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
-    public function updateDefaultSupportedIdpConfigs(string $name, $properties) : ResponseInterface;
+    public function updateDefaultSupportedIdpConfigs(string $name, $properties) : DefaultSupportedIdpConfig;
 
     /**
      * Create an inbound SAML configuration for an Identity Toolkit project.
      *
      * @param array<string, mixed>|Request\InboundSamlConfig $properties
-     * @return ResponseInterface
+     * @return InboundSamlConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
-    public function createInboundSamlConfigs($properties) : ResponseInterface;
+    public function createInboundSamlConfigs($properties) : InboundSamlConfig;
     /**
      * Delete an inbound SAML configuration for an Identity Toolkit project.
      *
      * @param string $name
      * @return ResponseInterface
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
     public function deleteInboundSamlConfigs(string $name) : ResponseInterface;
@@ -97,38 +102,39 @@ interface IdentityPlatform
      * Get an inbound SAML configuration for an Identity Toolkit project.
      *
      * @param string $name
-     * @return ResponseInterface
+     * @return InboundSamlConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
-    public function getInboundSamlConfigs(string $name) : ResponseInterface;
+    public function getInboundSamlConfigs(string $name) : InboundSamlConfig;
     /**
      * Update an inbound SAML configuration for an Identity Toolkit project.
      *
      * @param string $name
      * @param array<string, mixed>|Request\InboundSamlConfig $properties
-     * @return ResponseInterface
+     * @return InboundSamlConfig
      */
-    public function updateInboundSamlConfigs(string $name, $properties) : ResponseInterface;
+    public function updateInboundSamlConfigs(string $name, $properties) : InboundSamlConfig;
 
     /**
      * Create an Oidc Idp configuration for an Identity Toolkit project.
      *
      * @param array<string, mixed>|Request\OauthIdpConfig $properties
-     * @return ResponseInterface
+     * @return OauthIdpConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
-    public function createOauthIdpConfigs($properties) : ResponseInterface;
+
+    public function createOauthIdpConfigs($properties) : OauthIdpConfig;
     /**
      * Delete an Oidc Idp configuration for an Identity Toolkit project.
      *
      * @param string $name
      * @return ResponseInterface
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
     public function deleteOauthIdpConfigs(string $name) : ResponseInterface;
@@ -137,24 +143,24 @@ interface IdentityPlatform
      * Get an Oidc Idp configuration for an Identity Toolkit project.
      *
      * @param string $name
-     * @return ResponseInterface
+     * @return OauthIdpConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
-    public function getOauthIdpConfigs(string $name) : ResponseInterface;
+    public function getOauthIdpConfigs(string $name) : OauthIdpConfig;
 
     /**
      * Update Oidc Idp configuration for an Identity Toolkit project.
      *
      * @param string $name
      * @param array<string, mixed>|Request\OauthIdpConfig $properties
-     * @return ResponseInterface
+     * @return OauthIdpConfig
      *
-     * @throws Exception\AuthException
+     * @throws Exception\IdentityPlatformException
      * @throws Exception\FirebaseException
      */
-    public function updateOauthIdpConfigs(string $name, $properties) : ResponseInterface;
+    public function updateOauthIdpConfigs(string $name, $properties) : OauthIdpConfig;
 
 
 
