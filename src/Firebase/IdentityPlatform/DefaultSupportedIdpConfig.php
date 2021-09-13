@@ -23,6 +23,7 @@ class DefaultSupportedIdpConfig
     final private function __construct()
     {
     }
+
     // @phpstan-ignore-next-line (php 8 you can return static instead of self)
     public static function new()
     {
@@ -89,5 +90,14 @@ class DefaultSupportedIdpConfig
     public static function validateName(string $name): bool
     {
         return true;
+    }
+
+    public function __get(string $name)
+    {
+        if (array_search($name,self::FIELDS) === false) {
+            return trigger_error("Property $name doesn't exists and cannot be set.", E_USER_ERROR);
+        }
+
+        return $this->$name ?? null;
     }
 }

@@ -88,4 +88,13 @@ class SpConfig implements \JsonSerializable
     {
         return \array_filter($this->toArray(), static fn ($value) => $value !== null);
     }
+
+    public function __get(string $name)
+    {
+        if (array_search($name,self::FIELDS) === false) {
+            return trigger_error("Property $name doesn't exists and cannot be set.", E_USER_ERROR);
+        }
+
+        return $this->$name ?? null;
+    }
 }
