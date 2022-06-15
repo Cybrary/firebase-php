@@ -191,6 +191,16 @@ final class AuthTest extends IntegrationTestCase
         $this->auth->getEmailActionLink('unsupported', self::randomEmail(__FUNCTION__));
     }
 
+    public function testGetLocalizedEmailActionLink(): void
+    {
+        $user = $this->createUserWithEmailAndPassword();
+        $this->assertIsString($user->email);
+
+        $link = $this->auth->getEmailVerificationLink($user->email, null, 'fr');
+
+        $this->assertStringContainsString('lang=fr', $link);
+    }
+
     public function testSendUnsupportedEmailActionLink(): void
     {
         $this->expectException(FailedToSendActionLink::class);
@@ -718,34 +728,6 @@ final class AuthTest extends IntegrationTestCase
         $this->addToAssertionCount(1);
 
         $this->auth->deleteUser($user->uid);
-    }
-
-    public function testSignInWithTwitterOauthCredential(): void
-    {
-        // We can't retrieve a credential programmatically, so we'll test the failure case only
-        $this->expectException(FailedToSignIn::class);
-        $this->auth->signInWithTwitterOauthCredential('access_token', 'oauth_token_secret');
-    }
-
-    public function testSignInWithGoogleIdToken(): void
-    {
-        // We can't retrieve a credential programmatically, so we'll test the failure case only
-        $this->expectException(FailedToSignIn::class);
-        $this->auth->signInWithGoogleIdToken('id_token');
-    }
-
-    public function testSignInWithFacebookAccessToken(): void
-    {
-        // We can't retrieve a credential programmatically, so we'll test the failure case only
-        $this->expectException(FailedToSignIn::class);
-        $this->auth->signInWithFacebookAccessToken('access_token');
-    }
-
-    public function testSignInWithAppleIdToken(): void
-    {
-        // We can't retrieve a credential programmatically, so we'll test the failure case only
-        $this->expectException(FailedToSignIn::class);
-        $this->auth->signInWithAppleIdToken('id_token', 'nonce');
     }
 
     public function testSignInWithIdpAccessToken(): void
