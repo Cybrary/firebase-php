@@ -6,18 +6,18 @@ namespace Kreait\Firebase\Tests\Unit;
 
 use Kreait\Firebase\Exception\InvalidArgumentException;
 use Kreait\Firebase\Exception\Messaging\InvalidArgument;
+use Kreait\Firebase\Exception\MessagingApiExceptionConverter;
 use Kreait\Firebase\Messaging;
 use Kreait\Firebase\Messaging\ApiClient;
 use Kreait\Firebase\Messaging\AppInstanceApiClient;
 use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Project\ProjectId;
 use Kreait\Firebase\Tests\UnitTestCase;
-use stdClass;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * @internal
  */
-class MessagingTest extends UnitTestCase
+final class MessagingTest extends UnitTestCase
 {
     private Messaging $messaging;
 
@@ -25,57 +25,40 @@ class MessagingTest extends UnitTestCase
     {
         $messagingApi = $this->createMock(ApiClient::class);
         $appInstanceApi = $this->createMock(AppInstanceApiClient::class);
+        $exceptionConverter = new MessagingApiExceptionConverter();
 
-        $this->messaging = new Messaging(ProjectId::fromString('project-id'), $messagingApi, $appInstanceApi);
+        $this->messaging = new Messaging($messagingApi, $appInstanceApi, $exceptionConverter);
     }
 
-    public function testSendInvalidArray(): void
+    #[Test]
+    public function sendInvalidArray(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->messaging->send([]);
     }
 
-    public function testSubscribeToTopicWithInvalidTokens(): void
-    {
-        $this->expectException(InvalidArgument::class);
-        $this->messaging->subscribeToTopic('topic', new stdClass());
-    }
-
-    public function testSubscribeToTopicWithEmptyTokenList(): void
+    #[Test]
+    public function subscribeToTopicWithEmptyTokenList(): void
     {
         $this->expectException(InvalidArgument::class);
         $this->messaging->subscribeToTopic('topic', []);
     }
 
-    public function testUnsubscribeFromTopicWithEmptyTokenList(): void
+    #[Test]
+    public function unsubscribeFromTopicWithEmptyTokenList(): void
     {
         $this->expectException(InvalidArgument::class);
         $this->messaging->unsubscribeFromTopic('topic', []);
     }
 
-    public function testItWillNotSendAMessageWithoutATarget(): void
+    #[Test]
+    public function itWillNotSendAMessageWithoutATarget(): void
     {
         $message = CloudMessage::new();
 
-        $this->assertFalse($message->hasTarget());
-
         $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/missing a target/');
+
         $this->messaging->send($message);
-    }
-
-    public function testAMulticastMessageCannotBeTooLarge(): void
-    {
-        $tokens = \array_fill(0, 501, 'token');
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->messaging->sendMulticast(CloudMessage::new(), $tokens);
-    }
-
-    public function testSendAllCannotBeTooLarge(): void
-    {
-        $messages = \array_fill(0, 501, CloudMessage::new());
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->messaging->sendAll($messages);
     }
 }

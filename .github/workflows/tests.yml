@@ -1,30 +1,50 @@
 name: Tests
 
 on:
-  - pull_request
-  - push
-  - workflow_dispatch
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/tests.yml'
+      - 'composer.json'
+  push:
+    branches: ['7.x']
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/tests.yml'
+      - 'composer.json'
+  workflow_dispatch:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php }} (${{ matrix.stability }})
+    name: "PHP ${{ matrix.php }}, ${{ matrix.dependencies }} deps"
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        php: ["7.4", "8.0"]
-        stability: ["prefer-stable", "prefer-lowest"]
+        php:
+          - "8.1"
+          - "8.2"
+          - "8.3"
+        dependencies:
+          - "lowest"
+          - "highest"
+        include:
+          - php: "8.4"
+            composer-options: "--ignore-platform-reqs"
+            dependencies: "highest"
 
     env:
       extensions: ctype, dom, grpc, json, mbstring, openssl, xml, zip, zlib
-      key: cache-v6 # can be any string, change to clear the extension cache.
+      key: cache-unit-7x-${{ matrix.php }}-v1
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup cache environment
-        id: cache-env
+        id: extcache
         uses: shivammathur/cache-extensions@v1
         with:
           php-version: ${{ matrix.php }}
@@ -32,11 +52,11 @@ jobs:
           key: ${{ env.key }}
 
       - name: Cache extensions
-        uses: actions/cache@v2
+        uses: actions/cache@v4.2.0
         with:
-          path: ${{ steps.cache-env.outputs.dir }}
-          key: ${{ steps.cache-env.outputs.key }}
-          restore-keys: ${{ steps.cache-env.outputs.key }}
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -46,35 +66,45 @@ jobs:
           tools: composer, pecl
           coverage: xdebug
 
+      - uses: "ramsey/composer-install@v3"
+        with:
+          composer-options: "${{ matrix.composer-options }}"
+          dependency-versions: "${{ matrix.dependencies }}"
+
       - name: Setup problem matchers for PHP
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
 
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-${{ matrix.php }}-v6-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.php }}-composer-
-
-      - name: Install dependencies (stable)
-        run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest --no-progress
-
       - name: Run PHPStan
-        if: matrix.stability == 'prefer-stable'
-        run: vendor/bin/phpstan analyse --no-progress
+        run: XDEBUG_MODE=off vendor/bin/phpstan analyse --no-progress
 
       - name: Setup Problem Matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --testsuite=unit --coverage-clover=coverage.xml --log-junit=test-report.xml --verbose
+        run: vendor/bin/phpunit --testsuite=unit --coverage-clover=coverage.xml --log-junit=test-report.xml --testdox
 
       - name: Upload code coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v5.1.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unit
+
+  bc-checks:
+    name: Backward Compatibility Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: grpc
+
+      - name: Install roave/backward-compatibility-check.
+        run: composer require --dev roave/backward-compatibility-check
+
+      - name: Check for BC breaks
+        run: vendor/bin/roave-backward-compatibility-check --format=github-actions

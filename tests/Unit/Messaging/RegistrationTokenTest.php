@@ -4,33 +4,30 @@ declare(strict_types=1);
 
 namespace Kreait\Firebase\Tests\Unit\Messaging;
 
+use Beste\Json;
+use Iterator;
 use Kreait\Firebase\Messaging\RegistrationToken;
-use Kreait\Firebase\Util\JSON;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-class RegistrationTokenTest extends TestCase
+final class RegistrationTokenTest extends TestCase
 {
-    /**
-     * @dataProvider valueProvider
-     */
-    public function testFromValue(string $expected, string $value): void
+    #[DataProvider('valueProvider')]
+    #[Test]
+    public function fromValue(string $expected, string $value): void
     {
         $token = RegistrationToken::fromValue($value);
 
         $this->assertSame($expected, $token->value());
-        $this->assertSame('"'.$token.'"', JSON::encode($token));
+        $this->assertSame('"'.$token.'"', Json::encode($token));
     }
 
-    /**
-     * @return array<string, array<int, string>>
-     */
-    public function valueProvider(): array
+    public static function valueProvider(): Iterator
     {
-        return [
-            'foo' => ['foo', 'foo'],
-        ];
+        yield 'foo' => ['foo', 'foo'];
     }
 }

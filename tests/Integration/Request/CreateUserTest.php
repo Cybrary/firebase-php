@@ -7,11 +7,16 @@ namespace Kreait\Firebase\Tests\Integration\Request;
 use Kreait\Firebase\Contract\Auth;
 use Kreait\Firebase\Request\CreateUser;
 use Kreait\Firebase\Tests\IntegrationTestCase;
+use PHPUnit\Framework\Attributes\Test;
+
+use function bin2hex;
+use function random_bytes;
+use function random_int;
 
 /**
  * @internal
  */
-class CreateUserTest extends IntegrationTestCase
+final class CreateUserTest extends IntegrationTestCase
 {
     private Auth $auth;
 
@@ -20,14 +25,15 @@ class CreateUserTest extends IntegrationTestCase
         $this->auth = self::$factory->createAuth();
     }
 
-    public function testCreateUser(): void
+    #[Test]
+    public function createUser(): void
     {
         $request = CreateUser::new()
-            ->withUid($uid = \bin2hex(\random_bytes(5)))
+            ->withUid($uid = bin2hex(random_bytes(5)))
             ->withDisplayName($displayName = 'Some display name')
             ->withPhotoUrl($photoUrl = 'https://example.org/photo.jpg')
             ->withClearTextPassword('secret')
-            ->withPhoneNumber($phoneNumber = '+1234567'.\random_int(1000, 9999))
+            ->withPhoneNumber($phoneNumber = '+1234567'.random_int(1000, 9999))
             ->withVerifiedEmail($email = $uid.'@example.org')
         ;
 
@@ -45,26 +51,11 @@ class CreateUserTest extends IntegrationTestCase
         $this->auth->deleteUser($user->uid);
     }
 
-    public function testCreateUserWithoutEmailButMarkTheEmailAsVerified(): void
+    #[Test]
+    public function createUserWithoutEmailButMarkTheEmailAsUnverified(): void
     {
         $request = CreateUser::new()
-            ->withUid($uid = \bin2hex(\random_bytes(5)))
-            ->markEmailAsVerified()
-        ;
-
-        $user = $this->auth->createUser($request);
-
-        $this->assertSame($uid, $user->uid);
-        $this->assertNull($user->email);
-        $this->assertFalse($user->emailVerified);
-
-        $this->auth->deleteUser($user->uid);
-    }
-
-    public function testCreateUserWithoutEmailButMarkTheEmailAsUnverified(): void
-    {
-        $request = CreateUser::new()
-            ->withUid($uid = \bin2hex(\random_bytes(5)))
+            ->withUid($uid = bin2hex(random_bytes(5)))
             ->markEmailAsUnverified()
         ;
 

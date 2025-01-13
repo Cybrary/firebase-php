@@ -4,31 +4,34 @@ declare(strict_types=1);
 
 namespace Kreait\Firebase\Tests\Unit\Http;
 
-use GuzzleHttp\Psr7;
+use Closure;
+use GuzzleHttp\Psr7\Request;
 use Kreait\Firebase\Http\Middleware;
 use Kreait\Firebase\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\RequestInterface;
 
 /**
  * @internal
  */
-class MiddlewareTest extends UnitTestCase
+final class MiddlewareTest extends UnitTestCase
 {
-    private Psr7\Request $request;
+    private Request $request;
 
-    private \Closure $handler;
+    private Closure $handler;
 
     protected function setUp(): void
     {
-        $this->request = new Psr7\Request('GET', 'http://domain.tld');
-        $this->handler = static fn (RequestInterface $request) => $request;
+        $this->request = new Request('GET', 'http://example.com');
+        $this->handler = static fn(RequestInterface $request): RequestInterface => $request;
     }
 
-    public function testEnsureJsonSuffix(): void
+    #[Test]
+    public function ensureJsonSuffix(): void
     {
         $middleware = Middleware::ensureJsonSuffix();
         $handlerClosure = $middleware($this->handler);
-        /** @var RequestInterface $request */
+
         $request = $handlerClosure($this->request);
 
         $this->assertInstanceOf(RequestInterface::class, $request);

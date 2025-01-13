@@ -4,20 +4,29 @@ declare(strict_types=1);
 
 namespace Kreait\Firebase\Tests\Unit\Messaging;
 
+use Beste\Json;
+use Iterator;
+use Kreait\Firebase\Exception\Messaging\InvalidArgument;
 use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * @internal
+ *
+ * @phpstan-import-type AndroidConfigShape from AndroidConfig
  */
-class AndroidConfigTest extends UnitTestCase
+final class AndroidConfigTest extends UnitTestCase
 {
-    public function testItIsEmptyWhenItIsEmpty(): void
+    #[Test]
+    public function itIsEmptyWhenItIsEmpty(): void
     {
-        $this->assertSame('[]', \json_encode(AndroidConfig::new()));
+        $this->assertSame('[]', Json::encode(AndroidConfig::new()));
     }
 
-    public function testItHasADefaultSound(): void
+    #[Test]
+    public function itHasADefaultSound(): void
     {
         $expected = [
             'notification' => [
@@ -26,50 +35,89 @@ class AndroidConfigTest extends UnitTestCase
         ];
 
         $this->assertJsonStringEqualsJsonString(
-            \json_encode($expected),
-            \json_encode(AndroidConfig::new()->withDefaultSound())
+            Json::encode($expected),
+            Json::encode(AndroidConfig::new()->withDefaultSound()),
         );
     }
 
-    public function testItCanHaveAPriority(): void
+    #[Test]
+    public function itCanHaveAPriority(): void
     {
-        $config = AndroidConfig::new()->withNormalPriority();
+        $config = AndroidConfig::new()->withNormalMessagePriority();
         $this->assertSame('normal', $config->jsonSerialize()['priority']);
 
-        $config = AndroidConfig::new()->withHighPriority();
+        $config = AndroidConfig::new()->withHighMessagePriority();
         $this->assertSame('high', $config->jsonSerialize()['priority']);
     }
 
     /**
-     * @dataProvider validDataProvider
-     *
-     * @param array<string, array<string, mixed>> $data
+     * @param AndroidConfigShape $data
      */
-    public function testItCanBeCreatedFromAnArray(array $data): void
+    #[DataProvider('validDataProvider')]
+    #[Test]
+    public function itCanBeCreatedFromAnArray(array $data): void
     {
         $config = AndroidConfig::fromArray($data);
 
-        $this->assertEquals($data, $config->jsonSerialize());
+        $this->assertEqualsCanonicalizing($data, $config->jsonSerialize());
     }
 
-    /**
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    public function validDataProvider(): array
+    #[DataProvider('validTtlValues')]
+    #[Test]
+    public function itAcceptsValidTTLs(int|string|null $ttl): void
     {
-        return [
-            'full_config' => [[
-                // https://firebase.google.com/docs/cloud-messaging/admin/send-messages#android_specific_fields
-                'ttl' => '3600s',
-                'priority' => 'normal',
-                'notification' => [
-                    'title' => '$GOOG up 1.43% on the day',
-                    'body' => '$GOOG gained 11.80 points to close at 835.67, up 1.43% on the day.',
-                    'icon' => 'stock_ticker_update',
-                    'color' => '#f45342',
-                    'sound' => 'default',
-                ],
-            ]],
-        ];
+        AndroidConfig::fromArray([
+            'ttl' => $ttl,
+        ]);
+
+        $this->addToAssertionCount(1);
+    }
+
+    #[DataProvider('invalidTtlValues')]
+    #[Test]
+    public function itRejectsInvalidTTLs(mixed $ttl): void
+    {
+        $this->expectException(InvalidArgument::class);
+
+        AndroidConfig::fromArray([
+            'ttl' => $ttl,
+        ]);
+    }
+
+    public static function validDataProvider(): Iterator
+    {
+        yield 'full_config' => [[
+            // https://firebase.google.com/docs/cloud-messaging/admin/send-messages#android_specific_fields
+            'ttl' => '3600s',
+            'priority' => 'normal',
+            'notification' => [
+                'title' => '$GOOGLE up 1.43% on the day',
+                'body' => '$GOOGLE gained 11.80 points to close at 835.67, up 1.43% on the day.',
+                'icon' => 'stock_ticker_update',
+                'color' => '#f45342',
+                'sound' => 'default',
+            ],
+        ]];
+    }
+
+    public static function validTtlValues(): Iterator
+    {
+        yield 'positive int' => [1];
+        yield 'positive numeric string' => ['1'];
+        yield 'expected string' => ['1s'];
+        yield 'zero' => [0];
+        yield 'zero string' => ['0'];
+        yield 'zero string with suffix' => ['0s'];
+        yield 'null (#719)' => [null];
+    }
+
+    public static function invalidTtlValues(): Iterator
+    {
+        yield 'float' => [1.2];
+        yield 'wrong suffix' => ['1m'];
+        yield 'not numeric' => [true];
+        yield 'negative int' => [-1];
+        yield 'negative string' => ['-1'];
+        yield 'negative string with suffix' => ['-1s'];
     }
 }

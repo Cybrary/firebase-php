@@ -1,15 +1,14 @@
-/build
+*.log
+
+/.build
 /vendor
 /docs/_build
 /docs/*.pyc
-/tests/_fixtures/test_*
-/tools
+/tests/.env
 
-/.php-cs-fixer*
-!/.php-cs-fixer.dist.php
+/.firebaserc
+/.php-cs-fixer.cache
 /.phpunit.result.cache
-/cc-test-reporter
 /composer.lock
 /phpstan.neon
 /phpunit.xml
-/google-service-account.json

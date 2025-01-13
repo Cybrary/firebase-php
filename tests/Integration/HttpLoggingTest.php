@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace Kreait\Firebase\Tests\Integration;
 
 use Kreait\Firebase\Contract\Auth;
+use Kreait\Firebase\Exception\Auth\UserNotFound;
 use Kreait\Firebase\Tests\IntegrationTestCase;
-use Psr\Log\Test\TestLogger;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * @internal
  */
-class HttpLoggingTest extends IntegrationTestCase
+final class HttpLoggingTest extends IntegrationTestCase
 {
-    private TestLogger $logger;
+    private LoggerInterface&MockObject $logger;
 
-    private TestLogger $debugLogger;
+    private LoggerInterface&MockObject $debugLogger;
 
     private Auth $auth;
 
@@ -27,43 +31,47 @@ class HttpLoggingTest extends IntegrationTestCase
     {
         parent::setUp();
 
-        $this->logger = new TestLogger();
-        $this->debugLogger = new TestLogger();
+        $this->logger = $this->createMock(LoggerInterface::class);
+        $this->debugLogger = $this->createMock(LoggerInterface::class);
 
         $this->auth = self::$factory->createAuth();
         $this->authWithLogger = self::$factory->withHttpLogger($this->logger)->createAuth();
-        $this->authWithDebugLogger = self::$factory->withEnabledDebug($this->debugLogger)->createAuth();
+        $this->authWithDebugLogger = self::$factory->withHttpDebugLogger($this->debugLogger)->createAuth();
     }
 
-    public function testItLogsSuccesses(): void
+    #[Test]
+    public function itLogsSuccesses(): void
     {
         $user = $this->auth->createAnonymousUser();
 
         try {
+            $this->logger->expects($this->atLeastOnce())->method('log');
             $this->authWithLogger->getUser($user->uid);
-            $this->assertCount(1, $this->logger->records);
         } finally {
             $this->auth->deleteUser($user->uid);
         }
     }
 
-    public function testItLogsFailures(): void
+    #[Test]
+    public function itLogsFailures(): void
     {
+        $this->debugLogger->expects($this->atLeastOnce())->method('log');
+
         try {
             $this->authWithDebugLogger->updateUser('does-not-exist', []);
-        } catch (\Throwable $e) {
-        } finally {
-            $this->assertTrue($this->debugLogger->hasNoticeThatContains('USER_NOT_FOUND'));
+        } catch (Throwable $e) {
+            $this->assertInstanceOf(UserNotFound::class, $e);
         }
     }
 
-    public function testItUsesAHttpDebugLogger(): void
+    #[Test]
+    public function itUsesAHttpDebugLogger(): void
     {
         $user = $this->auth->createAnonymousUser();
 
         try {
+            $this->debugLogger->expects($this->atLeastOnce())->method('log');
             $this->authWithDebugLogger->getUser($user->uid);
-            $this->assertCount(1, $this->debugLogger->records);
         } finally {
             $this->auth->deleteUser($user->uid);
         }

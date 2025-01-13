@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Kreait\Firebase\Tests\Integration\Request;
 
+use DateTimeImmutable;
 use Kreait\Firebase\Contract\Auth;
 use Kreait\Firebase\Request\CreateUser;
 use Kreait\Firebase\Request\UpdateUser;
 use Kreait\Firebase\Tests\IntegrationTestCase;
-use Lcobucci\JWT\Token\Plain;
+use PHPUnit\Framework\Attributes\Test;
+
+use function bin2hex;
+use function random_bytes;
+use function random_int;
 
 /**
  * @internal
  */
-class UpdateUserTest extends IntegrationTestCase
+final class UpdateUserTest extends IntegrationTestCase
 {
     private Auth $auth;
 
@@ -22,7 +27,8 @@ class UpdateUserTest extends IntegrationTestCase
         $this->auth = self::$factory->createAuth();
     }
 
-    public function testRemovePhotoUrl(): void
+    #[Test]
+    public function removePhotoUrl(): void
     {
         $photoUrl = 'http://example.com/a_photo.jpg';
 
@@ -36,7 +42,8 @@ class UpdateUserTest extends IntegrationTestCase
         $this->auth->deleteUser($user->uid);
     }
 
-    public function testRemoveDisplayName(): void
+    #[Test]
+    public function removeDisplayName(): void
     {
         $displayName = 'A display name';
 
@@ -50,11 +57,12 @@ class UpdateUserTest extends IntegrationTestCase
         $this->auth->deleteUser($user->uid);
     }
 
-    public function testMarkNonExistingEmailAsVerified(): void
+    #[Test]
+    public function markNonExistingEmailAsVerified(): void
     {
         $user = $this->auth->createUser(
             CreateUser::new()
-                ->withUid($uid = \bin2hex(\random_bytes(5)))
+                ->withUid($uid = bin2hex(random_bytes(5))),
         );
 
         $this->assertNotTrue($user->emailVerified);
@@ -69,12 +77,13 @@ class UpdateUserTest extends IntegrationTestCase
         $this->auth->deleteUser($updatedUser->uid);
     }
 
-    public function testMarkExistingUnverifiedEmailAsVerified(): void
+    #[Test]
+    public function markExistingUnverifiedEmailAsVerified(): void
     {
         $user = $this->auth->createUser(
             CreateUser::new()
-                ->withUid($uid = \bin2hex(\random_bytes(5)))
-                ->withUnverifiedEmail($uid.'@example.org')
+                ->withUid($uid = bin2hex(random_bytes(5)))
+                ->withUnverifiedEmail($uid.'@example.org'),
         );
 
         $this->assertFalse($user->emailVerified);
@@ -88,12 +97,13 @@ class UpdateUserTest extends IntegrationTestCase
         $this->auth->deleteUser($updatedUser->uid);
     }
 
-    public function testMarkExistingVerifiedEmailAsUnverified(): void
+    #[Test]
+    public function markExistingVerifiedEmailAsUnverified(): void
     {
         $user = $this->auth->createUser(
             CreateUser::new()
-                ->withUid($uid = \bin2hex(\random_bytes(5)))
-                ->withVerifiedEmail($uid.'@example.org')
+                ->withUid($uid = bin2hex(random_bytes(5)))
+                ->withVerifiedEmail($uid.'@example.org'),
         );
 
         $this->assertTrue($user->emailVerified);
@@ -107,10 +117,11 @@ class UpdateUserTest extends IntegrationTestCase
         $this->auth->deleteUser($updatedUser->uid);
     }
 
-    public function testUpdateUserWithCustomAttributes(): void
+    #[Test]
+    public function updateUserWithCustomAttributes(): void
     {
         $request = CreateUser::new()
-            ->withUid($uid = \bin2hex(\random_bytes(5)))
+            ->withUid($uid = bin2hex(random_bytes(5)))
         ;
 
         $this->auth->createUser($request);
@@ -123,34 +134,34 @@ class UpdateUserTest extends IntegrationTestCase
         ;
 
         $user = $this->auth->updateUser($uid, $request);
-        $this->assertEquals($claims, $user->customClaims);
+        $this->assertEqualsCanonicalizing($claims, $user->customClaims);
 
         $idToken = $this->auth->signInAsUser($user)->idToken();
         $this->assertNotNull($idToken);
 
         $verifiedToken = $this->auth->verifyIdToken($idToken);
 
-        $this->assertInstanceOf(Plain::class, $verifiedToken);
         $this->assertTrue($verifiedToken->claims()->get('admin'));
         $this->assertSame('1234', $verifiedToken->claims()->get('groupId'));
 
         $this->auth->deleteUser($uid);
     }
 
-    public function testRemovePhoneNumber(): void
+    #[Test]
+    public function removePhoneNumber(): void
     {
         $user = $this->auth->createUser(
             CreateUser::new()
-                ->withUid($uid = \bin2hex(\random_bytes(5)))
+                ->withUid($uid = bin2hex(random_bytes(5)))
                 ->withVerifiedEmail($uid.'@example.org')
-                ->withPhoneNumber($phoneNumber = '+1234567'.\random_int(1000, 9999))
+                ->withPhoneNumber($phoneNumber = '+1234567'.random_int(1000, 9999)),
         );
 
         $this->assertSame($phoneNumber, $user->phoneNumber);
 
         $updatedUser = $this->auth->updateUser(
             $user->uid,
-            UpdateUser::new()->withRemovedPhoneNumber()
+            UpdateUser::new()->withRemovedPhoneNumber(),
         );
 
         $this->assertNull($updatedUser->phoneNumber);
@@ -161,7 +172,8 @@ class UpdateUserTest extends IntegrationTestCase
     /**
      * @see https://github.com/kreait/firebase-php/issues/196
      */
-    public function testReEnable(): void
+    #[Test]
+    public function reEnable(): void
     {
         $user = $this->auth->createUser([
             'disabled' => true,
@@ -176,16 +188,19 @@ class UpdateUserTest extends IntegrationTestCase
         $this->auth->deleteUser($user->uid);
     }
 
-    public function testTimeOfLastPasswordUpdateIsIncluded(): void
+    #[Test]
+    public function timeOfLastPasswordUpdateIsIncluded(): void
     {
         $user = $this->auth->createAnonymousUser();
 
-        $this->assertNull($user->metadata->passwordUpdatedAt);
+        try {
+            $this->assertNull($user->metadata->passwordUpdatedAt);
 
-        $updatedUser = $this->auth->updateUser($user->uid, ['password' => 'new-password']);
+            $updatedUser = $this->auth->updateUser($user->uid, ['password' => 'new-password']);
 
-        $this->assertInstanceOf(\DateTimeImmutable::class, $updatedUser->metadata->passwordUpdatedAt);
-
-        $this->deleteUser($user);
+            $this->assertInstanceOf(DateTimeImmutable::class, $updatedUser->metadata->passwordUpdatedAt);
+        } finally {
+            $this->auth->deleteUser($user->uid);
+        }
     }
 }

@@ -6,14 +6,16 @@ namespace Kreait\Firebase\Tests\Unit\RemoteConfig;
 
 use Kreait\Firebase\RemoteConfig\Parameter;
 use Kreait\Firebase\RemoteConfig\ParameterGroup;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-class ParameterGroupTest extends TestCase
+final class ParameterGroupTest extends TestCase
 {
-    public function testItCanBeCreated(): void
+    #[Test]
+    public function itCanBeCreated(): void
     {
         $group = ParameterGroup::named($name = 'name')
             ->withDescription($description = 'description')
