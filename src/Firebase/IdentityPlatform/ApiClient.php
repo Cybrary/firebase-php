@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Kreait\Firebase\IdentityPlatform;
 
 use GuzzleHttp\ClientInterface;
-use Kreait\Firebase\Auth\TenantId;
 use Kreait\Firebase\Exception\AuthException;
 use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Firebase\Exception\IdentityPlatform\IdentityPlatformError;
 use Kreait\Firebase\Exception\IdentityPlatformApiExceptionConverter;
-use Kreait\Firebase\Project\ProjectId;
 use Kreait\Firebase\Request\DefaultSupportedIdpConfig as DefaultSupportedIdpConfigRequest;
 use Kreait\Firebase\Request\InboundSamlConfig as InboundSamlConfigRequest;
 use Kreait\Firebase\Request\OAuthIdpConfig as OAuthIdpConfigRequest;
@@ -23,14 +21,14 @@ use Throwable;
 class ApiClient
 {
     private ClientInterface $client;
-    private ?TenantId $tenantId;
-    private ?ProjectId $projectId;
+    private ?string $tenantId;
+    private ?string $projectId;
     private IdentityPlatformApiExceptionConverter $errorHandler;
 
     /**
      * @internal
      */
-    public function __construct(ClientInterface $client, ?ProjectId $projectId, ?TenantId $tenantId = null)
+    public function __construct(ClientInterface $client, ?string $projectId, ?string $tenantId = null)
     {
         $this->client = $client;
         $this->projectId = $projectId;
@@ -218,7 +216,7 @@ class ApiClient
             throw new IdentityPlatformError('ProjectId must be specified for this api call');
         }
         $uri = $this->injectTenantId($uri);
-        $uri = \sprintf('projects/%s/%s', $this->projectId->value(), $uri);
+        $uri = \sprintf('projects/%s/%s', $this->projectId, $uri);
 
         return $this->requestApi($method, $uri, $data, $query);
     }
@@ -229,7 +227,7 @@ class ApiClient
     private function injectTenantId(string $uri): string
     {
         if ($this->tenantId) {
-            $uri = \sprintf('tenants/%s/%s', $this->tenantId->toString(), $uri);
+            $uri = \sprintf('tenants/%s/%s', $this->tenantId, $uri);
         }
 
         return $uri;
